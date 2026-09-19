@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://ir.ozone.ru https://images.unsplash.com; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Каталог — Софьюшка</title>
+<link rel="icon" href="assets/img/logo-kids.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap&subset=cyrillic" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+
+<main class="wrap">
+  <div class="page-head">
+    <nav class="crumbs" aria-label="Навигация"><a href="index.html">Главная</a><span>/</span><span id="crumb">Каталог</span></nav>
+    <h1 id="title">Каталог</h1>
+  </div>
+
+  <div class="catalog">
+    <aside class="filters" id="filters" aria-label="Фильтры">
+      <div class="filters__close"><h2 style="margin:0;font-size:22px;color:var(--plum)">Фильтры</h2><button class="iconbtn" data-close aria-label="Закрыть"></button></div>
+      <div><h2>Рост малыша</h2><div id="hr"></div></div>
+      <div><h2>Что ищем</h2><div class="chips" id="cats"></div></div>
+      <div><h2>Цена до</h2>
+        <div class="chips" id="prices">
+          <button class="chip" data-max="1000">1 000 ₽</button><button class="chip" data-max="2000">2 000 ₽</button><button class="chip" data-max="3000">3 000 ₽</button>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" id="instock"> Только в наличии</label>
+      <button class="btn btn--block" data-close-apply hidden>Показать</button>
+    </aside>
+
+    <section>
+      <div class="toolbar">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button class="btn btn--ghost btn--sm toolbar__filters" id="openF"></button>
+          <span class="toolbar__count num" id="count"></span>
+          <div class="active-tags" id="tags"></div>
+        </div>
+        <select class="select" id="sort" aria-label="Сортировка">
+          <option value="pop">Сначала любимые</option><option value="new">Сначала новинки</option>
+          <option value="cheap">Подешевле</option><option value="exp">Подороже</option>
+        </select>
+      </div>
+      <div class="grid" id="list" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))"></div>
+    </section>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const { $, $$, card, esc, icon } = UI;
+  const qp = new URLSearchParams(location.search);
+  const st = {
+    q: qp.get('q') || '', cat: qp.get('cat') || '', tag: qp.get('tag') || '', fav: qp.get('fav') === '1',
+    size: +qp.get('size') || ((S.user() && S.user().child.cm) || null), max: 0, inStock: false, sort: 'pop',
+  };
+  if (!qp.get('size') && (st.q || st.cat || st.tag || st.fav)) st.size = null;
+
+  $('#openF').innerHTML = icon('filter') + 'Фильтры';
+  $('[data-close]').innerHTML = icon('close');
+  const hr = UI.hruler($('#hr'), { value: st.size, onChange: v => { st.size = v; render(); } });
+
+  $('#cats').innerHTML = S.CATEGORIES.map(c => `<button class="chip" data-cat="${c.id}">${esc(c.name)}</button>`).join('');
+  $('#cats').addEventListener('click', e => { const b = e.target.closest('[data-cat]'); if (!b) return; st.cat = st.cat === b.dataset.cat ? '' : b.dataset.cat; render(); });
+  $('#prices').addEventListener('click', e => { const b = e.target.closest('[data-max]'); if (!b) return; st.max = st.max === +b.dataset.max ? 0 : +b.dataset.max; render(); });
+  $('#instock').addEventListener('change', e => { st.inStock = e.target.checked; render(); });
+  $('#sort').addEventListener('change', e => { st.sort = e.target.value; render(); });
+  $('#tags').addEventListener('click', e => {
+    const b = e.target.closest('[data-rm]'); if (!b) return;
+    const k = b.dataset.rm;
+    if (k === 'size') hr.set(null, false);
+    st[k] = k === 'fav' || k === 'inStock' ? false : (k === 'max' ? 0 : (k === 'size' ? null : ''));
+    if (k === 'inStock') $('#instock').checked = false;
+    render();
+  });
+  const F = $('#filters');
+  $('#openF').addEventListener('click', () => { F.classList.add('is-on'); $('[data-close-apply]').hidden = false; });
+  F.addEventListener('click', e => { if (e.target.closest('[data-close],[data-close-apply]')) F.classList.remove('is-on'); });
+
+  const tagNames = { new: 'Новинки', hit: 'Любимое', sale: 'Скидки' };
+  function render() {
+    let list = S.search(st.q, { cat: st.cat, size: st.size, tag: st.tag, max: st.max, inStock: st.inStock });
+    if (st.fav) list = list.filter(p => S.fav().includes(p.id));
+    const sorters = {
+      pop: (a, b) => (b.tags.includes('hit') - a.tags.includes('hit')) || (b.stock > 0) - (a.stock > 0),
+      new: (a, b) => b.tags.includes('new') - a.tags.includes('new'), cheap: (a, b) => a.price - b.price, exp: (a, b) => b.price - a.price,
+    };
+    list = [...list].sort(sorters[st.sort]);
+    window.__pickSize = st.size;
+    const c = S.cat(st.cat);
+    const title = st.fav ? 'Избранное' : st.q ? `«${st.q}»` : c ? c.name : st.tag ? tagNames[st.tag] : 'Каталог';
+    $('#title').textContent = title; $('#crumb').textContent = title; document.title = title + ' — Софьюшка';
+    $('#count').textContent = list.length + ' ' + (list.length % 10 === 1 && list.length % 100 !== 11 ? 'вещь' : [2, 3, 4].includes(list.length % 10) && ![12, 13, 14].includes(list.length % 100) ? 'вещи' : 'вещей');
+    $$('[data-cat]').forEach(b => b.classList.toggle('is-on', b.dataset.cat === st.cat));
+    $$('[data-max]').forEach(b => b.classList.toggle('is-on', +b.dataset.max === st.max));
+    const t = [];
+    if (st.size) t.push(['size', st.size + ' см']);
+    if (st.q) t.push(['q', '«' + esc(st.q) + '»']);
+    if (st.tag) t.push(['tag', tagNames[st.tag]]);
+    if (st.max) t.push(['max', 'до ' + S.rub(st.max)]);
+    if (st.inStock) t.push(['inStock', 'в наличии']);
+    $('#tags').innerHTML = t.map(([k, v]) => `<button class="chip" data-rm="${k}">${v}${icon('close')}</button>`).join('');
+    $('#list').innerHTML = list.length ? list.map(card).join('') :
+      `<div class="empty" style="grid-column:1/-1"><img src="assets/img/logo-kids.png" alt=""><h2>${st.fav ? 'Пока пусто' : 'Ничего не нашлось'}</h2>
+       <p>${st.fav ? 'Нажмите на сердечко у вещи, и она появится здесь.' : 'Попробуйте другой рост или уберите фильтр.'}</p><a class="btn" href="catalog.html">Весь каталог</a></div>`;
+  }
+  render();
+});
+</script>
+</body>
+</html>

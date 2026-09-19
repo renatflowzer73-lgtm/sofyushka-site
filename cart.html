@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://ir.ozone.ru https://images.unsplash.com; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Корзина — Софьюшка</title>
+<link rel="icon" href="assets/img/logo-kids.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap&subset=cyrillic" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+<main class="wrap" id="app"></main>
+<div id="site-footer"></div>
+
+<script src="assets/js/store.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const { $, $$, esc, icon } = UI;
+  const app = $('#app');
+  const st = { code: '', useBonus: false, delivery: 'СДЭК', payment: 'Карта' };
+
+  function calc() {
+    const sub = S.cartTotal();
+    const promo = st.code ? S.promoByCode(st.code) : null;
+    const disc = promo && promo.discount ? Math.round(sub * promo.discount / 100) : 0;
+    const u = S.user();
+    const maxB = u ? Math.min(u.bonus, Math.floor((sub - disc) * .3)) : 0;
+    const bonus = st.useBonus ? maxB : 0;
+    const ship = sub - disc >= 5000 ? 0 : 350;
+    const total = sub - disc - bonus + ship;
+    const earn = u ? Math.round((total - ship) * S.level(u.spent).cash / 100) : Math.round((total - ship) * .03);
+    return { sub, promo, disc, maxB, bonus, ship, total, earn, u };
+  }
+
+  function render() {
+    const lines = S.cart();
+    if (!lines.length) {
+      app.innerHTML = `<div class="empty" style="padding:100px 0"><img src="assets/img/logo-kids.png" alt=""><h1 style="font-size:44px">В корзине пусто</h1>
+        <p>Выберите рост малыша — подберём, что подойдёт.</p><a class="btn" href="index.html">На главную</a></div>`;
+      return;
+    }
+    const u = S.user();
+    app.innerHTML = `
+      <div class="page-head"><h1>Корзина</h1></div>
+      <div class="cart">
+        <div>
+          <div id="lines">${lines.map(l => `
+            <div class="cart-line">
+              <a href="product.html?id=${l.id}"><img src="${S.U(l.p.img, 300)}" alt=""></a>
+              <div><b>${esc(l.p.name)}</b><p class="muted">${l.size ? 'Рост ' + l.size + ' см · ' + S.ageFor(l.size) : esc(UI.sizeLabel(l.p))}</p>
+                <div class="qty" style="height:42px;margin-top:10px"><button data-dec="${l.id}:${l.size}" aria-label="Меньше">−</button><output>${l.qty}</output><button data-inc="${l.id}:${l.size}" aria-label="Больше">+</button></div></div>
+              <div class="cart-line__side"><span class="cart-line__price">${S.rub(l.p.price * l.qty)}</span><button class="linkbtn" data-rm="${l.id}:${l.size}">Удалить</button></div>
+            </div>`).join('')}</div>
+
+          <form id="checkout" novalidate>
+            <div class="checkout-block">
+              <h2>Кому</h2>
+              ${u ? '' : `<p class="muted" style="font-size:14px"><a href="account.html?back=cart" style="color:var(--plum);font-weight:800">Войдите</a>, чтобы получить 500 бонусов и копить с этого заказа.</p>`}
+              <div class="form-grid">
+                <label class="field"><span>Имя</span><input class="input" name="name" autocomplete="name" value="${esc(u ? u.name : '')}" required></label>
+                <label class="field"><span>Телефон</span><input class="input" name="phone" type="tel" autocomplete="tel" placeholder="+7 ___ ___-__-__" value="${u && u.method === 'phone' ? esc(u.login) : ''}" required></label>
+                <label class="field full"><span>Адрес или пункт выдачи</span><input class="input" name="address" autocomplete="street-address" placeholder="Город, улица, дом" required></label>
+              </div>
+            </div>
+            <div class="checkout-block">
+              <h2>Доставка</h2>
+              <div class="seg">
+                ${[['СДЭК', '2–3 дня'], ['Почта России', '3–7 дней'], ['Курьер', 'завтра']].map(([v, s]) => `<label><input type="radio" name="delivery" value="${v}" ${st.delivery === v ? 'checked' : ''}><span>${v}<small>${s}</small></span></label>`).join('')}
+              </div>
+            </div>
+            <div class="checkout-block">
+              <h2>Оплата</h2>
+              <div class="seg">
+                ${[['Карта', 'онлайн'], ['СБП', 'по QR-коду'], ['При получении', 'картой или наличными']].map(([v, s]) => `<label><input type="radio" name="payment" value="${v}" ${st.payment === v ? 'checked' : ''}><span>${v}<small>${s}</small></span></label>`).join('')}
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <aside class="panel panel--sticky" id="summary"></aside>
+      </div>`;
+    summary();
+  }
+
+  function summary() {
+    const c = calc();
+    $('#summary').innerHTML = `
+      <h2 style="font-size:26px">Итого</h2>
+      <div class="sum-row"><span>Товары</span><span>${S.rub(c.sub)}</span></div>
+      ${c.disc ? `<div class="sum-row"><span>Промокод ${esc(c.promo.code)}</span><span class="ok">−${S.rub(c.disc)}</span></div>` : ''}
+      ${c.bonus ? `<div class="sum-row"><span>Бонусами</span><span class="ok">−${S.rub(c.bonus)}</span></div>` : ''}
+      <div class="sum-row"><span>Доставка</span><span>${c.ship ? S.rub(c.ship) : '<span class="ok">бесплатно</span>'}</span></div>
+      ${c.ship ? `<p class="muted" style="font-size:13px">Ещё ${S.rub(5000 - c.sub + c.disc)} — и доставка бесплатно</p>` : ''}
+      <div class="sum-row is-total"><span>К оплате</span><span>${S.rub(c.total)}</span></div>
+      <span class="pinfo__bonus" style="justify-self:start">${icon('star')} +${S.num(c.earn)} бонусов вернётся</span>
+      <form id="codeForm" style="display:flex;gap:8px">
+        <input class="input" name="code" placeholder="Промокод" value="${esc(st.code)}" aria-label="Промокод" style="min-height:46px">
+        <button class="btn btn--ghost btn--sm" style="min-height:46px">Применить</button>
+      </form>
+      <p class="err" id="codeErr">${st.code && !c.promo ? 'Такого промокода нет или он закончился' : ''}</p>
+      ${c.u ? `<label class="setting" style="padding:0;border:0"><div><b>Списать ${S.num(c.maxB)} бонусов</b><span>У вас ${S.num(c.u.bonus)}, можно до 30% заказа</span></div>
+        <span class="switch"><input type="checkbox" id="useB" ${st.useBonus ? 'checked' : ''} aria-label="Списать бонусы"></span></label>` : ''}
+      <label class="check" id="consentWrap"><input type="checkbox" id="consent" form="checkout">
+        <span>Согласен(на) на <a href="privacy.html" target="_blank">обработку персональных данных</a> для доставки заказа</span></label>
+      <button class="btn btn--block" id="pay" type="button">${st.payment === 'При получении' ? 'Оформить заказ' : 'Оплатить ' + S.rub(c.total)}</button>`;
+  }
+
+  app.addEventListener('click', e => {
+    const t = e.target.closest('[data-inc],[data-dec],[data-rm]'); if (t) {
+      const [id, size] = (t.dataset.inc || t.dataset.dec || t.dataset.rm).split(':').map(Number);
+      const l = S.cart().find(x => x.id === id && x.size === size);
+      S.setQty(id, size, t.dataset.rm ? 0 : l.qty + (t.dataset.inc ? 1 : -1)); render(); return;
+    }
+    if (e.target.closest('#pay')) submit();
+  });
+  app.addEventListener('change', e => {
+    if (e.target.name === 'delivery') st.delivery = e.target.value;
+    if (e.target.name === 'payment') { st.payment = e.target.value; summary(); }
+    if (e.target.id === 'useB') { st.useBonus = e.target.checked; summary(); }
+  });
+  app.addEventListener('submit', e => {
+    e.preventDefault();
+    if (e.target.id === 'codeForm') { st.code = e.target.code.value.trim(); summary(); if (S.promoByCode(st.code)) UI.toast('Промокод применён'); }
+  });
+
+  function submit() {
+    const f = $('#checkout'); let ok = true;
+    ['name', 'phone', 'address'].forEach(n => { const bad = !f[n].value.trim() || (n === 'phone' && f[n].value.replace(/\D/g, '').length < 10); f[n].classList.toggle('is-error', bad); if (bad) ok = false; });
+    const consent = $('#consent').checked;
+    $('#consentWrap').classList.toggle('is-error', !consent);
+    if (!ok) { f.querySelector('.is-error').focus(); UI.toast('Заполните имя, телефон и адрес'); return; }
+    if (!consent) { UI.toast('Нужно согласие на обработку данных — без него не сможем доставить'); return; }
+    const btn = $('#pay'); btn.classList.add('is-loading'); btn.textContent = st.payment === 'При получении' ? 'Оформляем' : 'Оплата';
+    setTimeout(() => {
+      const r = S.placeOrder({ name: f.name.value.trim(), phone: f.phone.value.trim(), address: f.address.value.trim(), delivery: st.delivery, payment: st.payment, code: st.code, useBonus: st.useBonus });
+      scrollTo(0, 0);
+      app.innerHTML = `<div class="success">
+        <img src="assets/img/logo-kids.png" alt="">
+        <h1>Спасибо! Заказ № ${r.order.id}</h1>
+        <p class="muted">${r.order.pay === 'Оплачен' ? 'Оплата прошла.' : 'Оплатите при получении.'} Соберём сегодня и пришлём SMS с номером отслеживания.</p>
+        ${S.user() ? `<span class="pinfo__bonus">${icon('star')} +${S.num(r.earned)} бонусов уже на счету</span>` : `<p class="muted">Войдите в кабинет, чтобы видеть статус и копить бонусы.</p>`}
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center"><a class="btn" href="account.html#orders">Где мой заказ?</a><a class="btn btn--ghost" href="index.html">На главную</a></div>
+      </div>`;
+    }, 1100);
+  }
+
+  render();
+});
+</script>
+</body>
+</html>

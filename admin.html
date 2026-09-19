@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://ir.ozone.ru https://images.unsplash.com; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Администратор — Софьюшка</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="assets/img/logo-kids.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap&subset=cyrillic" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body class="adm-body">
+<div id="app"></div>
+
+<div class="drawer-bg" id="dbg"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+  <div class="drawer__head"><h2 id="dTitle"></h2><button class="iconbtn" data-dclose aria-label="Закрыть"></button></div>
+  <form class="drawer__body" id="dForm" novalidate></form>
+  <div class="drawer__foot"><button class="btn btn--ghost" data-dclose type="button">Отмена</button><button class="btn" form="dForm">Сохранить</button></div>
+</aside>
+
+<script src="assets/js/store.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/admin.js"></script>
+</body>
+</html>

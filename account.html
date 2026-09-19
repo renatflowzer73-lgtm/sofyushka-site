@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://ir.ozone.ru https://images.unsplash.com; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Личный кабинет — Софьюшка</title>
+<link rel="icon" href="assets/img/logo-kids.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap&subset=cyrillic" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+<main class="wrap" id="app" style="padding-top:clamp(24px,4vw,48px)"></main>
+<div id="site-footer"></div>
+
+<script src="assets/js/store.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const { $, $$, esc, icon } = UI;
+  const app = $('#app');
+  const back = new URLSearchParams(location.search).get('back');
+
+  /* ================= вход ================= */
+  function renderAuth() {
+    app.innerHTML = `
+      <div class="auth">
+        <div class="auth__img">
+          <img src="https://images.unsplash.com/photo-1560707854-fb9a10eeaace?w=1000&q=80&auto=format&fit=crop" alt="Мама с малышом">
+          <div class="auth__gift">${icon('gift')}<b>500 ₽</b><span>бонусами сразу после входа — на первый заказ</span></div>
+        </div>
+        <div class="auth__body">
+          <h1>Вход и регистрация</h1>
+          <div class="auth__tabs" role="tablist">
+            <button role="tab" aria-selected="true" data-tab="phone">${icon('phone')}Телефон</button>
+            <button role="tab" aria-selected="false" data-tab="vk">${icon('vk')}VK ID</button>
+            <button role="tab" aria-selected="false" data-tab="mail">${icon('mail')}Почта</button>
+          </div>
+
+          <form class="auth__pane" data-pane="phone" novalidate>
+            <div data-step="1" class="auth__pane">
+              <label class="field"><span>Номер телефона</span><input class="input" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 900 000-00-00"></label>
+              <p class="err" data-err></p>
+            </div>
+            <div data-step="2" class="auth__pane" hidden>
+              <p>Код отправили на <b data-to></b>. <button type="button" class="linkbtn" data-change>Изменить</button></p>
+              <div class="code-inputs">${'<input inputmode="numeric" maxlength="1" aria-label="Цифра кода">'.repeat(4)}</div>
+              <p class="hint">Демо: введите <b>1234</b></p>
+              <p class="err" data-err2></p>
+            </div>
+          </form>
+
+          <div class="auth__pane" data-pane="vk" hidden>
+            <p class="muted">Войдём через ваш аккаунт ВКонтакте — без паролей. Возьмём только имя.</p>
+            <label class="field"><span>Как к вам обращаться (демо)</span><input class="input" id="vkName" value="Анастасия"></label>
+          </div>
+
+          <form class="auth__pane" data-pane="mail" hidden novalidate>
+            <label class="field"><span>Почта</span><input class="input" name="email" type="email" autocomplete="email" placeholder="mama@mail.ru"></label>
+            <label class="field"><span>Пароль</span><input class="input" name="pass" type="password" autocomplete="current-password" placeholder="Не меньше 6 символов"></label>
+            <p class="err" data-err3></p>
+          </form>
+
+          <div style="display:grid;gap:12px">
+            <label class="check" id="c1"><input type="checkbox" id="consent">
+              <span>Согласен(на) на <a href="privacy.html" target="_blank">обработку персональных данных</a> по 152-ФЗ</span></label>
+            <label class="check"><input type="checkbox" id="mkt" checked><span>Хочу получать акции и подарки (можно отключить в кабинете)</span></label>
+          </div>
+          <button class="btn btn--block" id="go">Получить код</button>
+        </div>
+      </div>`;
+
+    let tab = 'phone', step = 1;
+    const go = $('#go');
+    const label = () => { go.className = 'btn btn--block' + (tab === 'vk' ? ' vk-btn' : ''); go.innerHTML = tab === 'phone' ? (step === 1 ? 'Получить код' : 'Войти') : tab === 'vk' ? icon('vk') + 'Войти через VK ID' : 'Войти'; };
+    $$('[data-tab]').forEach(b => b.addEventListener('click', () => {
+      tab = b.dataset.tab; $$('[data-tab]').forEach(x => x.setAttribute('aria-selected', x === b));
+      $$('[data-pane]').forEach(p => p.hidden = p.dataset.pane !== tab); label();
+    }));
+    const codes = $$('.code-inputs input');
+    codes.forEach((inp, i) => {
+      inp.addEventListener('input', () => { inp.value = inp.value.replace(/\D/g, ''); if (inp.value && codes[i + 1]) codes[i + 1].focus(); if (codes.every(c => c.value)) submit(); });
+      inp.addEventListener('keydown', e => { if (e.key === 'Backspace' && !inp.value && codes[i - 1]) codes[i - 1].focus(); });
+    });
+    $('[data-change]').addEventListener('click', () => { step = 1; $('[data-step="1"]').hidden = false; $('[data-step="2"]').hidden = true; label(); });
+    $$('form', app).forEach(f => f.addEventListener('submit', e => { e.preventDefault(); submit(); }));
+    go.addEventListener('click', submit);
+
+    function needConsent() {
+      const ok = $('#consent').checked; $('#c1').classList.toggle('is-error', !ok);
+      if (!ok) UI.toast('Отметьте согласие на обработку данных'); return ok;
+    }
+    function done(method, data) {
+      go.classList.add('is-loading');
+      setTimeout(() => {
+        const u = S.login(method, { ...data, marketing: $('#mkt').checked });
+        UI.toast(`Добро пожаловать! На счету ${S.num(u.bonus)} бонусов`);
+        if (back === 'cart') location.href = 'cart.html'; else renderCab();
+      }, 700);
+    }
+    function submit() {
+      if (tab === 'phone') {
+        const f = $('[data-pane="phone"]');
+        if (step === 1) {
+          const d = f.phone.value.replace(/\D/g, '');
+          if (d.length < 10) { f.phone.classList.add('is-error'); $('[data-err]').textContent = 'Введите номер целиком, 10 цифр после +7'; return; }
+          if (!needConsent()) return;
+          f.phone.classList.remove('is-error'); $('[data-err]').textContent = '';
+          step = 2; $('[data-to]').textContent = f.phone.value; $('[data-step="1"]').hidden = true; $('[data-step="2"]').hidden = false; codes[0].focus(); label();
+        } else {
+          const code = codes.map(c => c.value).join('');
+          if (code !== '1234') { $('[data-err2]').textContent = 'Код не подошёл. Проверьте SMS или запросите новый'; codes.forEach(c => c.value = ''); codes[0].focus(); return; }
+          done('phone', { login: f.phone.value.trim(), name: '' });
+        }
+      } else if (tab === 'vk') {
+        if (!needConsent()) return;
+        done('vk', { login: 'id' + Math.floor(Math.random() * 9e8), name: $('#vkName').value.trim() || 'Гость' });
+      } else {
+        const f = $('[data-pane="mail"]');
+        const okMail = /\S+@\S+\.\S+/.test(f.email.value), okPass = f.pass.value.length >= 6;
+        f.email.classList.toggle('is-error', !okMail); f.pass.classList.toggle('is-error', !okPass);
+        $('[data-err3]').textContent = !okMail ? 'Проверьте адрес почты' : !okPass ? 'Пароль — от 6 символов' : '';
+        if (!okMail || !okPass || !needConsent()) return;
+        done('mail', { login: f.email.value.trim(), name: '' });
+      }
+    }
+  }
+
+  /* ================= кабинет ================= */
+  const TABS = [['home', 'Главное', 'home'], ['orders', 'Заказы', 'box'], ['bonus', 'Бонусы', 'star'], ['kid', 'Мой малыш', 'ruler'], ['profile', 'Данные и согласия', 'shield']];
+  let cur = (location.hash || '#home').slice(1);
+
+  function renderCab() {
+    const u = S.user();
+    if (!TABS.some(t => t[0] === cur)) cur = 'home';
+    app.innerHTML = `<div class="cab">
+      <nav class="cab__nav" aria-label="Кабинет">
+        ${TABS.map(([id, t, ic]) => `<button data-go="${id}" aria-current="${id === cur}">${icon(ic)}${t}</button>`).join('')}
+        <button data-logout>${icon('logout')}Выйти</button>
+      </nav>
+      <div class="cab__main" id="pane"></div></div>`;
+    ({ home, orders, bonus, kid, profile })[cur](u);
+  }
+  app.addEventListener('click', e => {
+    const g = e.target.closest('[data-go]');
+    if (g) { cur = g.dataset.go; history.replaceState(null, '', '#' + cur); renderCab(); scrollTo({ top: 0, behavior: 'smooth' }); }
+    if (e.target.closest('[data-logout]')) { S.logout(); cur = 'home'; history.replaceState(null, '', location.pathname); renderAuth(); }
+  });
+
+  const hello = u => `<div class="cab__hello"><h1>${u.name ? 'Привет, ' + esc(u.name) + '!' : 'Здравствуйте!'}</h1>
+    <span class="muted">${u.method === 'vk' ? 'Вход через VK ID' : esc(u.login)}</span></div>`;
+
+  function bonusCard(u) {
+    const l = S.level(u.spent);
+    return `<div class="bonus-card">
+      <div class="bonus-card__left">
+        <small>Ваши бонусы</small>
+        <div class="bonus-card__sum">${S.num(u.bonus)}</div>
+        <span class="bonus-card__level">${icon('star')} ${l.name} · ${l.cash}% с покупок</span>
+      </div>
+      <div class="bonus-card__right">
+        <div class="lvl-names">${S.LEVELS.map(x => `<span>${x.name}</span>`).join('')}</div>
+        <div class="lvl-track"><i style="width:${Math.round(((S.LEVELS.indexOf(S.LEVELS.find(x => x.id === l.id)) + Math.min(1, l.progress)) / (S.LEVELS.length - 1)) * 100)}%"></i></div>
+        <p class="bonus-card__trend">${l.next ? `ещё ${S.rub(l.toNext)} — и станете «${l.next.name}», ${l.next.cash}% с покупок` : 'Вы на самом высоком уровне!'}</p>
+      </div></div>`;
+  }
+
+  function orderCard(o) {
+    const items = o.items.map(i => S.product(i.id)).filter(Boolean);
+    return `<div class="order">
+      <div class="order__top">
+        <div><b>№ ${o.id}</b> <span class="muted" style="font-size:14px">· ${S.date(o.date)} · ${S.rub(S.orderSum(o))}</span></div>
+        <span class="status status--${UI.statusClass(o.pay)}">${o.pay}</span>
+      </div>
+      <div class="order__imgs">${items.map(p => `<a href="product.html?id=${p.id}"><img src="${S.U(p.img, 160)}" alt="${esc(p.name)}"></a>`).join('')}</div>
+      ${o.pay === 'Отменён' ? '' : `<ol class="track" style="padding:0;margin:0"><span class="track__fill" style="width:${o.step / 4 * 80}%"></span>
+        ${S.ORDER_STEPS.map((s, i) => `<li class="${i <= o.step ? 'is-done' : ''} ${i === o.step ? 'is-now' : ''}"><i>${icon('check')}</i><span>${s}</span></li>`).join('')}</ol>`}
+    </div>`;
+  }
+
+  function home(u) {
+    const my = u.orders.map(S.order).filter(Boolean);
+    const offers = S.activePromos().slice(0, 3);
+    $('#pane').innerHTML = hello(u) + bonusCard(u) + `
+      <div class="box"><div class="box__head"><h2>Последний заказ</h2><button class="link-more" style="border:0;background:none" data-go="orders">Все заказы ${icon('arrow')}</button></div>
+        ${my.length ? orderCard(my[0]) : '<p class="muted">Заказов пока нет — самое время выбрать первый.</p>'}</div>
+      <div class="box"><div class="box__head"><h2>Акции для вас</h2></div>
+        <div class="offers">${offers.map(p => `<a class="offer" href="catalog.html${p.discount ? '?cat=knit' : ''}"><img src="${S.U(p.img, 600)}" alt=""><div><b>${esc(p.title)}</b><span>${esc(p.text)}${p.code ? ' · ' + esc(p.code) : ''}</span></div></a>`).join('')}</div></div>`;
+  }
+
+  function orders(u) {
+    const my = u.orders.map(S.order).filter(Boolean);
+    $('#pane').innerHTML = `<div class="cab__hello"><h1>Мои заказы</h1></div>
+      ${my.length ? my.map(orderCard).join('') : `<div class="empty"><img src="assets/img/logo-kids.png" alt=""><p>Здесь появятся ваши заказы и где они сейчас едут.</p><a class="btn" href="catalog.html">В каталог</a></div>`}`;
+  }
+
+  function bonus(u) {
+    $('#pane').innerHTML = `<div class="cab__hello"><h1>Бонусы</h1></div>` + bonusCard(u) + `
+      <div class="rules">
+        <div class="rule"><b>500</b><span>за регистрацию</span></div>
+        <div class="rule"><b>3–7%</b><span>возвращаем с каждой покупки</span></div>
+        <div class="rule"><b>30%</b><span>заказа можно оплатить бонусами</span></div>
+        <div class="rule"><b>×2</b><span>в неделю дня рождения малыша</span></div>
+      </div>
+      <div class="box"><div class="box__head"><h2>История</h2></div>
+        <div class="hist">${u.history.map(h => `<div><span>${esc(h.text)} <span class="muted">· ${S.date(h.date)}</span></span><span class="${h.amount >= 0 ? 'plus' : 'minus'}">${h.amount >= 0 ? '+' : '−'}${S.num(Math.abs(h.amount))}</span></div>`).join('')}</div></div>
+      <p class="muted" style="font-size:13px">Правила бонусной программы в демо-макете условные — утвердите свои перед запуском.</p>`;
+  }
+
+  function kid(u) {
+    $('#pane').innerHTML = `<div class="cab__hello"><h1>Мой малыш</h1></div>
+      <div class="box kid">
+        <div class="doorframe" id="kdoor"></div>
+        <form id="kidForm" style="display:grid;gap:16px">
+          <p class="muted">Отметьте рост — каталог сразу покажет вещи нужного размера.</p>
+          <label class="field"><span>Имя</span><input class="input" name="name" value="${esc(u.child.name)}" placeholder="Софья"></label>
+          <label class="field"><span>День рождения — бонусы ×2</span><input class="input" type="date" name="birthday" value="${esc(u.child.birthday)}"></label>
+          <p class="hand" style="font-size:28px;color:var(--graphite)" id="kcm">${u.child.cm} см · ${S.ageFor(u.child.cm)}</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn">Сохранить</button><a class="btn btn--ghost" href="catalog.html?size=${u.child.cm}" id="kgo">Вещи на ${u.child.cm} см</a></div>
+        </form>
+      </div>`;
+    let cm = u.child.cm;
+    UI.ruler($('#kdoor'), { value: cm, onChange: v => { cm = v; $('#kcm').textContent = `${v} см · ${S.ageFor(v)}`; $('#kgo').textContent = `Вещи на ${v} см`; $('#kgo').href = 'catalog.html?size=' + v; } });
+    $('#kidForm').addEventListener('submit', e => { e.preventDefault(); S.updateUser({ child: { name: e.target.name.value.trim(), birthday: e.target.birthday.value, cm } }); UI.toast('Сохранили'); });
+  }
+
+  function profile(u) {
+    const ck = S.cookie() || { analytics: false, ads: false };
+    $('#pane').innerHTML = `<div class="cab__hello"><h1>Данные и согласия</h1></div>
+      <div class="box">
+        <form id="pf" class="form-grid">
+          <label class="field"><span>Имя</span><input class="input" name="name" value="${esc(u.name)}"></label>
+          <label class="field"><span>${u.method === 'mail' ? 'Почта' : u.method === 'vk' ? 'VK ID' : 'Телефон'}</span><input class="input" value="${esc(u.login)}" disabled></label>
+          <div class="full"><button class="btn btn--sm">Сохранить</button></div>
+        </form>
+      </div>
+      <div class="box">
+        <div class="setting"><div><b>Обработка персональных данных</b><span>Согласие дано ${S.date(u.consentAt)} · <a href="privacy.html">политика</a></span></div><span class="status status--ok">Действует</span></div>
+        <label class="setting"><div><b>Акции и подарки</b><span>SMS и письма не чаще раза в неделю</span></div><span class="switch"><input type="checkbox" data-set="marketing" ${u.marketing ? 'checked' : ''} aria-label="Акции"></span></label>
+        <label class="setting"><div><b>Cookie аналитики</b><span>Помогают делать сайт удобнее</span></div><span class="switch"><input type="checkbox" data-ck="analytics" ${ck.analytics ? 'checked' : ''} aria-label="Cookie аналитики"></span></label>
+        <label class="setting"><div><b>Рекламные cookie</b><span>Персональные предложения</span></div><span class="switch"><input type="checkbox" data-ck="ads" ${ck.ads ? 'checked' : ''} aria-label="Рекламные cookie"></span></label>
+        <div class="setting"><div><b>Удалить мои данные</b><span>Отзовём согласие и удалим кабинет за 30 дней</span></div><button class="btn btn--ghost btn--sm" data-del>Запросить</button></div>
+      </div>`;
+    $('#pf').addEventListener('submit', e => { e.preventDefault(); S.updateUser({ name: e.target.name.value.trim() }); UI.toast('Сохранили'); renderCab(); });
+    $('[data-set]').addEventListener('change', e => { S.updateUser({ marketing: e.target.checked }); UI.toast(e.target.checked ? 'Будем присылать подарки' : 'Больше не пишем про акции'); });
+    $$('[data-ck]').forEach(i => i.addEventListener('change', () => { S.setCookie({ necessary: true, analytics: $('[data-ck=analytics]').checked, ads: $('[data-ck=ads]').checked }); UI.toast('Настройки cookie сохранены'); }));
+    $('[data-del]').addEventListener('click', e => { e.target.disabled = true; e.target.textContent = 'Запрос отправлен'; UI.toast('Запрос принят. Ответим на почту или SMS в течение 30 дней'); });
+  }
+
+  S.user() ? renderCab() : renderAuth();
+});
+</script>
+</body>
+</html>

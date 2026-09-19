@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://ir.ozone.ru https://images.unsplash.com; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Персональные данные — Софьюшка</title>
+<link rel="icon" href="assets/img/logo-kids.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap&subset=cyrillic" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  .doc { max-width: 760px; display: grid; gap: 34px; padding-bottom: 20px; }
+  .doc h2 { font-size: 26px; margin-bottom: 12px; }
+  .doc p, .doc li { color: var(--ink); font-size: 16px; line-height: 1.7; }
+  .doc ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+  .doc__note { background: var(--butter); border-radius: var(--r-m); padding: 18px 22px; font-size: 14px; }
+</style>
+</head>
+<body>
+<div id="site-header"></div>
+<main class="wrap">
+  <div class="page-head"><nav class="crumbs"><a href="index.html">Главная</a><span>/</span><span>Персональные данные</span></nav><h1>Как мы бережём ваши данные</h1></div>
+  <article class="doc">
+    <p class="doc__note">Демо-текст для макета. Перед запуском замените его на политику, согласованную с юристом (152-ФЗ «О персональных данных»), и укажите реквизиты оператора.</p>
+    <section><h2>Что собираем</h2><ul><li>Имя, телефон или почту — для входа и связи.</li><li>Адрес — чтобы доставить заказ.</li><li>Рост и день рождения малыша — по желанию, для подбора размера и бонусов.</li></ul></section>
+    <section><h2>Зачем</h2><ul><li>Оформить, оплатить и доставить заказ.</li><li>Начислять бонусы и показывать статус заказа.</li><li>Присылать акции — только если вы согласились.</li></ul></section>
+    <section><h2>Кому передаём</h2><p>Только службам доставки и платёжному сервису — ровно то, что нужно для заказа. Не продаём и не передаём третьим лицам для рекламы.</p></section>
+    <section id="cookie"><h2>Cookie</h2><p>Необходимые cookie хранят корзину и вход. Аналитические и рекламные включаются только с вашего согласия. Изменить выбор можно в личном кабинете, в разделе «Данные и согласия».</p>
+      <button class="btn btn--ghost btn--sm" style="margin-top:16px" id="resetCookie">Изменить выбор cookie</button></section>
+    <section><h2>Ваши права</h2><p>Вы можете узнать, какие данные у нас есть, исправить их, отозвать согласие или удалить кабинет — кнопка есть в личном кабинете. Отвечаем в течение 30 дней.</p></section>
+  </article>
+</main>
+<div id="site-footer"></div>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+document.getElementById('resetCookie').addEventListener('click', () => { S.setCookie(null); location.reload(); });
+</script>
+</body>
+</html>

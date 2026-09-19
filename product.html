@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://ir.ozone.ru https://images.unsplash.com; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Товар — Софьюшка</title>
+<link rel="icon" href="assets/img/logo-kids.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap&subset=cyrillic" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+
+<main class="wrap">
+  <div class="page-head" style="padding-bottom:0"><nav class="crumbs" id="crumbs" aria-label="Навигация"></nav></div>
+  <div class="product" id="product"></div>
+
+  <section class="section">
+    <div class="section__head"><h2>С этим носят</h2></div>
+    <div class="grid" id="related"></div>
+  </section>
+</main>
+
+<div id="site-footer"></div>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const { $, $$, card, esc, icon } = UI;
+  const p = S.product(new URLSearchParams(location.search).get('id')) || S.products()[0];
+  const c = S.cat(p.cat);
+  document.title = p.name + ' — Софьюшка';
+  $('#crumbs').innerHTML = `<a href="index.html">Главная</a><span>/</span><a href="catalog.html?cat=${p.cat}">${esc(c ? c.name : 'Каталог')}</a><span>/</span><span>${esc(p.name)}</span>`;
+
+  const u = S.user();
+  const hasSizes = p.sizes.length > 0;
+  const pref = u && p.sizes.includes(u.child.cm) ? u.child.cm : null;
+  let size = hasSizes ? pref : 0, qty = 1;
+  const pics = p.gallery && p.gallery.length ? p.gallery : [p.img];
+  const shots = pics.map(id => S.U(id, 1000));
+  const thumbs = pics.map(id => S.U(id, 200));
+  const rate = String(p.rating || 4.9).replace('.', ',');
+  const facts = [p.qty > 1 ? p.qty + ' шт. в наборе' : '', p.dims || '', p.material].filter(Boolean);
+  const lvl = S.level(u ? u.spent : 0);
+  const stockCls = p.stock <= 0 ? 'is-out' : p.stock <= 5 ? 'is-low' : '';
+  const stockTxt = p.stock <= 0 ? 'Закончилось — скоро привезём' : p.stock <= 5 ? `Осталось ${p.stock} шт.` : 'Есть в наличии';
+
+  $('#product').innerHTML = `
+    <div class="gallery">
+      <div class="gallery__thumbs">${thumbs.map((s, i) => `<button aria-label="Фото ${i + 1}" aria-pressed="${i === 0}" data-shot="${i}"><img src="${s}" alt=""></button>`).join('')}</div>
+      <div class="gallery__main"><img id="main" src="${shots[0]}" alt="${esc(p.name)}"></div>
+    </div>
+    <div class="pinfo">
+      <div style="display:grid;gap:14px">
+        <a class="rating" href="${S.OZON(p.sku)}" target="_blank" rel="noopener">${icon('star')} ${rate} · ${S.num(p.reviews || 0)} отзывов на Ozon</a>
+        <h1>${esc(p.name)}</h1>
+        <p class="muted" style="font-size:17px;max-width:46ch">${esc(p.desc || '')}</p>
+        <div class="pinfo__price">${S.rub(p.price)}${p.old ? `<s>${S.rub(p.old)}</s>` : ''}</div>
+        <span class="pinfo__bonus" style="justify-self:start">${icon('star')} +${S.num(p.price * lvl.cash / 100)} бонусов за покупку</span>
+      </div>
+      ${hasSizes ? `<div>
+        <div class="sizes-head"><b>Рост малыша</b><span id="age">${size ? S.ageFor(size) : 'выберите рост'}</span></div>
+        <div class="sizes" id="sizes">${S.SIZES.filter(s => s.cm >= 56).map(s => `<button class="chip chip--size" data-size="${s.cm}" aria-pressed="${s.cm === size}" ${p.sizes.includes(s.cm) ? '' : 'disabled'}>${s.cm}</button>`).join('')}</div>
+        <p class="err" id="sizeErr" style="margin-top:8px"></p>
+      </div>` : `<div class="sizes">${facts.slice(0, 2).map(f => `<span class="chip">${esc(f)}</span>`).join('')}</div>`}
+      <div class="buy">
+        <div class="qty"><button aria-label="Меньше" data-q="-1">−</button><output id="qty">1</output><button aria-label="Больше" data-q="1">+</button></div>
+        <button class="btn" id="add" style="flex:1" ${p.stock <= 0 ? 'disabled' : ''}>${icon('bag')} В корзину</button>
+        <button class="iconbtn" style="width:52px;height:52px;box-shadow:inset 0 0 0 1.5px var(--line)" aria-label="В избранное" aria-pressed="${S.fav().includes(p.id)}" data-fav-id="${p.id}">${icon('heart')}</button>
+      </div>
+      <span class="stock ${stockCls}">${stockTxt}</span>
+      <div class="acc">
+        <details open><summary>Состав и уход</summary><div>${esc(facts.join(' · '))}${p.color ? '. Расцветка: ' + esc(p.color) : ''}.${p.care ? '<br>' + esc(p.care) + '.' : ''} Сделано в России.</div></details>
+        <details><summary>Доставка</summary><div>СДЭК, Почта России или курьер. Бесплатно от 5 000 ₽.</div></details>
+        <details><summary>Обмен и возврат</summary><div>30 дней, если не подошёл размер. Бирки оставьте, пожалуйста.</div></details>
+        <details><summary>Этот товар на Ozon</summary><div>Артикул ${esc(p.sku || '—')}. <a href="${S.OZON(p.sku)}" target="_blank" rel="noopener" style="color:var(--plum);font-weight:800">Открыть карточку и отзывы</a></div></details>
+      </div>
+    </div>`;
+
+  $('#product').addEventListener('click', e => {
+    const s = e.target.closest('[data-size]');
+    if (s) { size = +s.dataset.size; $$('[data-size]').forEach(b => b.setAttribute('aria-pressed', b === s)); $('#age').textContent = S.ageFor(size); $('#sizeErr').textContent = ''; }
+    const q = e.target.closest('[data-q]');
+    if (q) { qty = Math.max(1, Math.min(p.stock || 1, qty + +q.dataset.q)); $('#qty').textContent = qty; }
+    const sh = e.target.closest('[data-shot]');
+    if (sh) { $('#main').src = shots[+sh.dataset.shot]; $$('[data-shot]').forEach(b => b.setAttribute('aria-pressed', b === sh)); }
+    if (e.target.closest('#add')) {
+      if (hasSizes && !size) { $('#sizeErr').textContent = 'Выберите рост — так мы положим нужный размер'; $('#sizes').animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(0)' }], { duration: 300 }); return; }
+      S.addToCart(p.id, size, qty);
+      UI.toast(`${esc(p.name)}${size ? ', ' + size + ' см' : ''} — в корзине`, { img: S.U(p.img, 120), link: ['cart.html', 'Оформить'] });
+    }
+  });
+
+  const rel = S.products().filter(x => x.id !== p.id && x.stock > 0 && (!hasSizes || !x.sizes.length || x.sizes.some(s => p.sizes.includes(s))))
+    .sort((a, b) => (b.cat !== p.cat) - (a.cat !== p.cat)).slice(0, 4);
+  window.__pickSize = size;
+  $('#related').innerHTML = rel.map(card).join('');
+});
+</script>
+</body>
+</html>
