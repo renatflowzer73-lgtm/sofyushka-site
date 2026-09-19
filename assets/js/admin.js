@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
       <label class="field"><span>Пароль</span><input class="input" name="p" type="password" autocomplete="current-password"></label>
       <p class="err" data-err></p>
       <button class="btn btn--block">Войти</button>
-      <p class="hint" style="text-align:center">Демо-доступ: <b>admin</b> / <b>admin</b></p>
       <a href="index.html" class="hint" style="text-align:center">← В магазин</a>
     </form></div>`;
     $('form', app).addEventListener('submit', e => {
