@@ -36,7 +36,7 @@
 .tbl .num { text-align: right; }
 .tbl th.num { text-align: right; }
 .pcell { display: flex; align-items: center; gap: 12px; min-width: 220px; }
-.pcell img { width: 44px; height: 52px; border-radius: 22px 22px 8px 8px; object-fit: cover; }
+.pcell img { width: 44px; height: 59px; border-radius: 22px 22px 8px 8px; object-fit: contain; background: #fff; }
 .pcell b { font-weight: 800; display: block; }
 .pcell small { color: var(--muted); }
 .cellin { width: 96px; min-height: 38px; padding: 0 10px; border-radius: 10px; border: 1.5px solid transparent; background: var(--ground); text-align: right; font-weight: 800; font-variant-numeric: tabular-nums; outline: none; }
