@@ -52,8 +52,7 @@
     el.innerHTML = `
       <div class="topbar"><div class="wrap">
         <span>${icon('truck')} Бесплатная доставка от 5 000 ₽</span>
-        <span>${icon('gift')} 500 бонусов за регистрацию</span>
-        <span>${icon('swap')} Обмен и возврат 30 дней</span>
+        <span>${icon('gift')} 100 бонусов за регистрацию</span>
       </div></div>
       <header class="header" id="hdr">
         <div class="wrap header__row">

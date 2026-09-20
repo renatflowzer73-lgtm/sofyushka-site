@@ -134,7 +134,7 @@
 
   const PROMOS = [
     { id: 1, title: 'Собираемся в роддом', text: 'Комплекты, пелёнки и распашонки — мягче к цене', discount: 10, code: 'РОДДОМ10', until: '2026-10-15', active: true, featured: true, img: '1607322851003-f5a88dc5b960' },
-    { id: 2, title: 'Первый заказ', text: '500 бонусов за регистрацию', discount: 0, code: '', until: '', active: true, featured: false, img: '1560707854-fb9a10eeaace' },
+    { id: 2, title: 'Первый заказ', text: '100 бонусов за регистрацию', discount: 0, code: '', until: '', active: true, featured: false, img: '1560707854-fb9a10eeaace' },
     { id: 3, title: 'День рождения малыша', text: 'Двойные бонусы всю неделю', discount: 0, code: '', until: '', active: true, featured: false, img: '1546015720-b8b30df5aa27' },
   ];
 
@@ -239,10 +239,10 @@
       let u = db.users[key];
       if (!u) {
         u = {
-          key, method, login: data.login, name: data.name || '', bonus: 500, spent: 0,
+          key, method, login: data.login, name: data.name || '', bonus: 100, spent: 0,
           child: { name: '', cm: 68, birthday: '' }, marketing: !!data.marketing,
           consentAt: new Date().toISOString(), orders: [],
-          history: [{ date: new Date().toISOString(), text: 'Подарок за регистрацию', amount: 500 }],
+          history: [{ date: new Date().toISOString(), text: 'Подарок за регистрацию', amount: 100 }],
         };
         // для наглядности демо: у нового кабинета есть пара прошлых заказов
         u.orders = [10429, 10427];
