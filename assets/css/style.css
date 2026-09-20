@@ -575,6 +575,20 @@ p { margin: 0; }
   .cart { grid-template-columns: 1fr; }
   .panel--sticky { position: static; }
 }
+/* бонусные уровни: на телефоне — списком, а не на линейке */
+@media (max-width: 760px) {
+  .growth__line { position: static; height: auto; margin-top: 26px; display: grid; gap: 10px; }
+  .growth__rule { display: none; }
+  .growth__lv { position: static; left: auto !important; transform: none; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 14px; background: var(--paper); border-radius: 18px; padding: 14px 18px; }
+  .growth__lv::after { display: none; }
+  .growth__lv b { font-size: 19px; }
+  .growth__lv span { grid-column: 1; }
+  .growth__lv em { position: static; grid-column: 2; grid-row: 1 / span 2; font-size: 23px; line-height: 1; white-space: nowrap; }
+  .growth__head h2 { max-width: none; }
+  .growth__kids { width: min(260px, 70%); }
+  .growth__foot { gap: 10px; }
+  .growth__foot .btn { width: 100%; }
+}
 @media (max-width: 900px) {
   .header__row { grid-template-columns: auto 1fr; min-height: 72px; gap: 12px; }
   .header .search { grid-column: 1 / -1; grid-row: 2; margin-bottom: 12px; height: 50px; }
