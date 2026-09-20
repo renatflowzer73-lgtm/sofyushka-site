@@ -2,10 +2,6 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="robots" content="noindex, nofollow">
-<meta name="referrer" content="strict-origin-when-cross-origin">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://ir.ozone.ru https://images.unsplash.com; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'">
-
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Софьюшка — одежда для малышей</title>
 <meta name="description" content="Нежная одежда для малышей от 50 до 104 см. Выберите рост — покажем, что подойдёт.">
@@ -146,10 +142,9 @@ document.addEventListener('DOMContentLoaded', () => {
   paint(cm);
 
   // категории
-  const heights = [300, 370, 330, 420, 360, 400];
   $('#lineup').innerHTML = ['sets', 'raspashonki', 'polzunki', 'body', 'pelenki', 'tops'].map((id, i) => {
     const c = S.cat(id);
-    return `<a href="catalog.html?cat=${id}"><div class="arch" style="height:${heights[i]}px;background:var(--${c.tint})"><img src="${S.U(c.img, 520)}" alt="" loading="lazy"></div>
+    return `<a href="catalog.html?cat=${id}"><div class="arch" style="background:var(--${c.tint})"><img src="${S.U(c.img, 520)}" alt="" loading="lazy"></div>
       <div><b>${esc(c.name)}</b><span>${c.from ? c.from + '–' + c.to + ' см' : '80×100, 100×100 см'}</span></div></a>`;
   }).join('');
 
